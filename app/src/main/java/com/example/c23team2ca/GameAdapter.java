@@ -39,7 +39,7 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
                 .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
                 .build());
         Glide.with(holder.imageView.getContext()).load(glideUrl).into(holder.imageView);
-        holder.imageView.setVisibility(View.INVISIBLE); // 默认不可见
+        holder.imageView.setVisibility(View.INVISIBLE);
         holder.itemView.setOnClickListener(v -> onImageClick(holder.imageView, imageUrl));
     }
 
@@ -52,11 +52,11 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
         if (firstImageView == null) {
             firstImageView = imageView;
             firstImageUrl = imageUrl;
-            imageView.setVisibility(View.VISIBLE); // 显示图片
+            imageView.setVisibility(View.VISIBLE);
         } else if (secondImageView == null && imageView != firstImageView) {
             secondImageView = imageView;
             secondImageUrl = imageUrl;
-            imageView.setVisibility(View.VISIBLE); // 显示图片
+            imageView.setVisibility(View.VISIBLE);
             checkMatch();
         }
     }
@@ -68,8 +68,8 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
         } else {
             listener.onImageRevealed(false);
             firstImageView.postDelayed(() -> {
-                firstImageView.setVisibility(View.INVISIBLE); // 隐藏图片
-                secondImageView.setVisibility(View.INVISIBLE); // 隐藏图片
+                firstImageView.setVisibility(View.INVISIBLE);
+                secondImageView.setVisibility(View.INVISIBLE);
                 resetSelection();
             }, 1000);
         }
