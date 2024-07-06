@@ -13,19 +13,31 @@
         android:padding="8dp">
 
         <TextView
+            android:id="@+id/playerTurnTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Player 1's Turn"
+            android:textSize="18sp"
+            android:padding="16dp"
+            android:gravity="center" />
+
+        <TextView
             android:id="@+id/matchCountTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0 of 6 matches"
-            android:layout_weight="1"/>
+            android:text="Matches: 0"
+            android:textSize="18sp"
+            android:padding="16dp"
+            android:gravity="center" />
 
         <TextView
             android:id="@+id/timerTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0:00"
-            android:layout_weight="1"
-            android:gravity="end"/>
+            android:textSize="18sp"
+            android:padding="16dp"
+            android:gravity="center" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -33,5 +45,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp" />
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"/>
 </LinearLayout>

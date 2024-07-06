@@ -6,6 +6,8 @@ import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,7 +17,7 @@ import java.util.List;
 
 public class GameActivity extends AppCompatActivity {
 
-    private TextView matchCountTextView, timerTextView;
+    private TextView matchCountTextView, timerTextView,playerTurnTextView;
     private RecyclerView gameRecyclerView;
     private GameAdapter gameAdapter;
     private List<String> gameImages = new ArrayList<>();
@@ -25,6 +27,9 @@ public class GameActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int matchSound;
     private int winSound;
+    private int currentPlayer = 1;
+    private int player1Matches = 0;
+    private int player2Matches = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +39,7 @@ public class GameActivity extends AppCompatActivity {
         matchCountTextView = findViewById(R.id.matchCountTextView);
         timerTextView = findViewById(R.id.timerTextView);
         gameRecyclerView = findViewById(R.id.gameRecyclerView);
+        playerTurnTextView = findViewById(R.id.playerTurnTextView);
 
         ArrayList<String> selectedImages = getIntent().getStringArrayListExtra("selectedImages");
         if (selectedImages != null) {
@@ -59,6 +65,7 @@ public class GameActivity extends AppCompatActivity {
         winSound = soundPool.load(this, R.raw.win, 1);
 
         startTimer();
+        updatePlayerTurnTextView();
     }
 
     private void startTimer() {
@@ -76,8 +83,13 @@ public class GameActivity extends AppCompatActivity {
 
     private void onImageRevealed(boolean isMatch) {
         if (isMatch) {
+            if (currentPlayer == 1) {
+                player1Matches++;
+            } else {
+                player2Matches++;
+            }
             matchCount++;
-            matchCountTextView.setText(String.format("%d of 6 matches", matchCount));
+            matchCountTextView.setText(String.format("Matches: %d", matchCount));
             soundPool.play(matchSound, 1, 1, 0, 0, 1); // Play the match sound
             if (matchCount == 6) {
                 // All matches found, play win sound and start CongratulationsActivity
@@ -86,9 +98,36 @@ public class GameActivity extends AppCompatActivity {
                 intent.putExtra("time", seconds);
                 startActivity(intent);
                 finish();
+                announceWinner();
             }
         }
+        switchPlayer();
     }
+
+    private void switchPlayer() {
+        currentPlayer = (currentPlayer == 1) ? 2 : 1;
+        updatePlayerTurnTextView();
+    }
+
+    private void updatePlayerTurnTextView() {
+        playerTurnTextView.setText(String.format("Player %d's Turn", currentPlayer));
+    }
+
+    private void announceWinner() {
+        String winnerMessage;
+        if (player1Matches > player2Matches) {
+            winnerMessage = "Player 1 wins!";
+        } else if (player2Matches > player1Matches) {
+            winnerMessage = "Player 2 wins!";
+        } else {
+            winnerMessage = "It's a tie!";
+        }
+        Toast.makeText(this, winnerMessage, Toast.LENGTH_LONG).show();
+        finish();
+    }
+
+
+
 
     @Override
     protected void onDestroy() {
