@@ -2,6 +2,7 @@ package com.example.c23team2ca;
 
 import android.content.Intent;
 import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,7 +18,7 @@ import java.util.List;
 
 public class GameActivity extends AppCompatActivity {
 
-    private TextView matchCountTextView, timerTextView,playerTurnTextView;
+    private TextView matchCountTextView, timerTextView, playerTurnTextView;
     private RecyclerView gameRecyclerView;
     private GameAdapter gameAdapter;
     private List<String> gameImages = new ArrayList<>();
@@ -27,6 +28,8 @@ public class GameActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int matchSound;
     private int winSound;
+    private int errorSound; // 配对错误的音效
+    private MediaPlayer backgroundMusicPlayer; // 背景音乐播放器
     private int currentPlayer = 1;
     private int player1Matches = 0;
     private int player2Matches = 0;
@@ -63,6 +66,12 @@ public class GameActivity extends AppCompatActivity {
                 .build();
         matchSound = soundPool.load(this, R.raw.match, 1);
         winSound = soundPool.load(this, R.raw.win, 1);
+        errorSound = soundPool.load(this, R.raw.error_sound, 1); // 配对错误的音效
+
+        // Initialize MediaPlayer for background music
+        backgroundMusicPlayer = MediaPlayer.create(this, R.raw.background_music);
+        backgroundMusicPlayer.setLooping(true);
+        backgroundMusicPlayer.start();
 
         startTimer();
         updatePlayerTurnTextView();
@@ -91,8 +100,7 @@ public class GameActivity extends AppCompatActivity {
             }
             matchCount++;
             matchCountTextView.setText(String.format("Player 1: %d, Player 2: %d", player1Matches, player2Matches));
-            if (matchCount==6)
-            {
+            if (matchCount == 6) {
                 // All matches found, play win sound and start CongratulationsActivity
                 soundPool.play(winSound, 1, 1, 0, 0, 1); // Play the win sound
                 announceWinner();
@@ -101,17 +109,18 @@ public class GameActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
+        } else {
+            soundPool.play(errorSound, 1, 1, 0, 0, 1); // Play the error sound
+            switchPlayer();
         }
-        else{switchPlayer();}
     }
 
     private void switchPlayer() {
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
         updatePlayerTurnTextView();
-        if(currentPlayer==1){
+        if (currentPlayer == 1) {
             matchCountTextView.setText(String.format("Player 1: %d", player1Matches));
-        }
-        else{
+        } else {
             matchCountTextView.setText(String.format("Player 2: %d", player2Matches));
         }
     }
@@ -133,9 +142,6 @@ public class GameActivity extends AppCompatActivity {
         finish();
     }
 
-
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -143,6 +149,12 @@ public class GameActivity extends AppCompatActivity {
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;
+        }
+        // Release MediaPlayer resources
+        if (backgroundMusicPlayer != null) {
+            backgroundMusicPlayer.stop();
+            backgroundMusicPlayer.release();
+            backgroundMusicPlayer = null;
         }
     }
 }

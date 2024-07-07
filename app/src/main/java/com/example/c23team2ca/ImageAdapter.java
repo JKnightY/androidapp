@@ -1,6 +1,5 @@
 package com.example.c23team2ca;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,14 +9,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
-
 import java.util.List;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
 
     private List<String> imageUrls;
-    private OnImageSelectedListener onImageSelectedListener;
     private List<String> selectedImages;
+    private OnImageSelectedListener onImageSelectedListener;
 
     public interface OnImageSelectedListener {
         void onImageSelected(String imageUrl);
@@ -49,8 +47,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
 
         if (selectedImages.contains(imageUrl)) {
             holder.selectedIndicator.setVisibility(View.VISIBLE);
+            holder.imageView.setAlpha(0.5f);
         } else {
             holder.selectedIndicator.setVisibility(View.GONE);
+            holder.imageView.setAlpha(1.0f);
         }
 
         holder.itemView.setOnClickListener(v -> {
