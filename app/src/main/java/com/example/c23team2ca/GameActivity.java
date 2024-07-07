@@ -90,8 +90,9 @@ public class GameActivity extends AppCompatActivity {
                 player2Matches++;
                 matchCountTextView.setText(String.format("Matches: %d", player2Matches));
             }
+            matchCount++;
             soundPool.play(matchSound, 1, 1, 0, 0, 1); // Play the match sound
-            if (player1Matches == 6||player2Matches==6)
+            if (matchCount==6)
             {
                 // All matches found, play win sound and start CongratulationsActivity
                 soundPool.play(winSound, 1, 1, 0, 0, 1); // Play the win sound
@@ -108,6 +109,12 @@ public class GameActivity extends AppCompatActivity {
     private void switchPlayer() {
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
         updatePlayerTurnTextView();
+        if(currentPlayer==1){
+            matchCountTextView.setText(String.format("Matches: %d", player1Matches));
+        }
+        else{
+            matchCountTextView.setText(String.format("Matches: %d", player2Matches));
+        }
     }
 
     private void updatePlayerTurnTextView() {
