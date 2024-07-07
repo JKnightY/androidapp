@@ -1,6 +1,6 @@
 package com.example.c23team2ca;
 
-import android.content.Context;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -47,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
     private List<String> fetchedUrls = new ArrayList<>();
     private SoundPool soundPool;
     private int soundEffect;
+    private AlertDialog progressDialog;
+    private ProgressBar dialogProgressBar;
+    private TextView dialogProgressTextView;
+    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +83,18 @@ public class MainActivity extends AppCompatActivity {
                 .setAudioAttributes(audioAttributes)
                 .build();
         soundEffect = soundPool.load(this, R.raw.sound_effect, 1);
+
+        handler = new Handler(Looper.getMainLooper());
+
+        // Initialize progress dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.progress_dialog, null);
+        dialogProgressBar = dialogView.findViewById(R.id.dialogProgressBar);
+        dialogProgressTextView = dialogView.findViewById(R.id.dialogProgressTextView);
+        builder.setView(dialogView);
+        builder.setCancelable(false);
+        progressDialog = builder.create();
     }
 
     private void fetchImages() {
@@ -90,72 +108,16 @@ public class MainActivity extends AppCompatActivity {
             url = "https://" + url;
         }
 
-        final String finalUrl = url;
-
         progressBar.setVisibility(View.VISIBLE);
         progressTextView.setVisibility(View.VISIBLE);
         progressTextView.setText("Downloading 0 of 20 images...");
 
+        dialogProgressBar.setMax(20);
+        dialogProgressTextView.setText("Downloading 0 of 20 images...");
+        progressDialog.show();
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-
-        executor.execute(() -> {
-            try {
-                Log.d(TAG, "Fetching URL: " + finalUrl);
-                Document doc = Jsoup.connect(finalUrl)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                        .timeout(10000)
-                        .get();
-                Elements images = doc.select("img[src]");
-                fetchedUrls.clear();
-                for (Element img : images) {
-                    String src = img.attr("abs:src");
-                    fetchedUrls.add(src);
-                }
-                Collections.shuffle(fetchedUrls);
-                if (fetchedUrls.size() > 20) {
-                    fetchedUrls = fetchedUrls.subList(0, 20);
-                }
-
-                handler.post(() -> {
-                    imageUrls.clear();
-                    imageAdapter.notifyDataSetChanged();
-                    progressBar.setMax(fetchedUrls.size());
-
-                    ExecutorService downloadExecutor = Executors.newFixedThreadPool(4);
-                    Handler downloadHandler = new Handler(Looper.getMainLooper());
-
-                    for (int i = 0; i < fetchedUrls.size(); i++) {
-                        final int index = i;
-                        downloadExecutor.execute(() -> {
-                            String imageUrl = fetchedUrls.get(index);
-                            Glide.with(MainActivity.this)
-                                    .load(imageUrl)
-                                    .preload();
-
-                            downloadHandler.post(() -> {
-                                imageUrls.add(imageUrl);
-                                imageAdapter.notifyItemInserted(imageUrls.size() - 1);
-                                progressTextView.setText("Downloading " + imageUrls.size() + " of " + fetchedUrls.size() + " images...");
-                                progressBar.setProgress(imageUrls.size());
-
-                                if (imageUrls.size() == fetchedUrls.size()) {
-                                    progressBar.setVisibility(View.GONE);
-                                    progressTextView.setVisibility(View.GONE);
-                                }
-                            });
-                        });
-                    }
-                });
-            } catch (IOException e) {
-                Log.e(TAG, "Error fetching images", e);
-                handler.post(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    progressTextView.setVisibility(View.GONE);
-                    Toast.makeText(MainActivity.this, "Failed to fetch images", Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
+        executor.execute(new DownloadImagesTask(url));
     }
 
     private void onImageSelected(String imageUrl) {
@@ -186,6 +148,72 @@ public class MainActivity extends AppCompatActivity {
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;
+        }
+    }
+
+    private class DownloadImagesTask implements Runnable {
+
+        private final String url;
+
+        public DownloadImagesTask(String url) {
+            this.url = url;
+        }
+
+        @Override
+        public void run() {
+            List<String> images = new ArrayList<>();
+            try {
+                Log.d(TAG, "Fetching URL: " + url);
+                Document doc = Jsoup.connect(url)
+                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                        .timeout(10000)
+                        .get();
+                Elements elements = doc.select("img[src]");
+                fetchedUrls.clear();
+                for (Element img : elements) {
+                    String src = img.attr("abs:src");
+                    fetchedUrls.add(src);
+                }
+                Collections.shuffle(fetchedUrls);
+                if (fetchedUrls.size() > 20) {
+                    fetchedUrls = fetchedUrls.subList(0, 20);
+                }
+
+                for (int i = 0; i < fetchedUrls.size(); i++) {
+                    String imageUrl = fetchedUrls.get(i);
+                    images.add(imageUrl);
+                    int progress = i + 1;
+                    handler.post(() -> updateProgress(progress, fetchedUrls.size()));
+                }
+
+                handler.post(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    progressTextView.setVisibility(View.GONE);
+                    progressDialog.dismiss();
+                    imageUrls.clear();
+                    imageUrls.addAll(images);
+                    imageAdapter.notifyDataSetChanged();
+                    Snackbar.make(findViewById(android.R.id.content), "Images downloaded successfully", Snackbar.LENGTH_LONG).show();
+                });
+
+            } catch (IOException e) {
+                Log.e(TAG, "Error fetching images", e);
+                handler.post(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    progressTextView.setVisibility(View.GONE);
+                    progressDialog.dismiss();
+                    Toast.makeText(MainActivity.this, "Failed to fetch images", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }
+
+        private void updateProgress(int progress, int max) {
+            handler.post(() -> {
+                progressTextView.setText("Downloading " + progress + " of " + max + " images...");
+                progressBar.setProgress(progress);
+                dialogProgressTextView.setText("Downloading " + progress + " of " + max + " images...");
+                dialogProgressBar.setProgress(progress);
+            });
         }
     }
 }
