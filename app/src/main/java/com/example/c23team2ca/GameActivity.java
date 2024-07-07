@@ -83,24 +83,23 @@ public class GameActivity extends AppCompatActivity {
 
     private void onImageRevealed(boolean isMatch) {
         if (isMatch) {
+            soundPool.play(matchSound, 1, 1, 0, 0, 1); // Play the match sound
             if (currentPlayer == 1) {
                 player1Matches++;
-                matchCountTextView.setText(String.format("Matches: %d", player1Matches));
             } else {
                 player2Matches++;
-                matchCountTextView.setText(String.format("Matches: %d", player2Matches));
             }
             matchCount++;
-            soundPool.play(matchSound, 1, 1, 0, 0, 1); // Play the match sound
+            matchCountTextView.setText(String.format("Player 1: %d, Player 2: %d", player1Matches, player2Matches));
             if (matchCount==6)
             {
                 // All matches found, play win sound and start CongratulationsActivity
                 soundPool.play(winSound, 1, 1, 0, 0, 1); // Play the win sound
+                announceWinner();
                 Intent intent = new Intent(GameActivity.this, CongratulationsActivity.class);
                 intent.putExtra("time", seconds);
                 startActivity(intent);
                 finish();
-                announceWinner();
             }
         }
         else{switchPlayer();}
@@ -110,10 +109,10 @@ public class GameActivity extends AppCompatActivity {
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
         updatePlayerTurnTextView();
         if(currentPlayer==1){
-            matchCountTextView.setText(String.format("Matches: %d", player1Matches));
+            matchCountTextView.setText(String.format("Player 1: %d", player1Matches));
         }
         else{
-            matchCountTextView.setText(String.format("Matches: %d", player2Matches));
+            matchCountTextView.setText(String.format("Player 2: %d", player2Matches));
         }
     }
 
@@ -124,11 +123,11 @@ public class GameActivity extends AppCompatActivity {
     private void announceWinner() {
         String winnerMessage;
         if (player1Matches > player2Matches) {
-            winnerMessage = "Player 1 wins!";
+            winnerMessage = String.format("Player 1 wins! Score: Player 1: %d, Player 2: %d", player1Matches, player2Matches);
         } else if (player2Matches > player1Matches) {
-            winnerMessage = "Player 2 wins!";
+            winnerMessage = String.format("Player 2 wins! Score: Player 1: %d, Player 2: %d", player1Matches, player2Matches);
         } else {
-            winnerMessage = "It's a tie!";
+            winnerMessage = String.format("It's a tie! Score: Player 1: %d, Player 2: %d", player1Matches, player2Matches);
         }
         Toast.makeText(this, winnerMessage, Toast.LENGTH_LONG).show();
         finish();
