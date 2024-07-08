@@ -54,6 +54,7 @@ public class GameActivity extends AppCompatActivity {
         gameAdapter = new GameAdapter(gameImages, this::onImageRevealed);
         gameRecyclerView.setLayoutManager(new GridLayoutManager(this, 4));
         gameRecyclerView.setAdapter(gameAdapter);
+        gameRecyclerView.scheduleLayoutAnimation();
 
         // Initialize SoundPool
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
