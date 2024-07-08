@@ -100,8 +100,9 @@ public class MainActivity extends AppCompatActivity {
     private void fetchImages() {
         String url = urlEditText.getText().toString();
         if (url.isEmpty()) {
-            Toast.makeText(this, "Please enter a URL", Toast.LENGTH_SHORT).show();
-            return;
+            //Toast.makeText(this, "Please enter a URL", Toast.LENGTH_SHORT).show();
+            //return;
+            url = (String) urlEditText.getHint();
         }
 
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
