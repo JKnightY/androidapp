@@ -29,6 +29,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -109,6 +111,12 @@ public class MainActivity extends AppCompatActivity {
             url = "https://" + url;
         }
 
+
+        selectedImages.clear();
+        imageAdapter.notifyDataSetChanged();
+        startGameButton.setVisibility(View.GONE);
+
+
         progressBar.setVisibility(View.VISIBLE);
         progressTextView.setVisibility(View.VISIBLE);
         progressTextView.setText("Downloading 0 of 20 images...");
@@ -174,6 +182,9 @@ public class MainActivity extends AppCompatActivity {
                 for (Element img : elements) {
                     String src = img.attr("abs:src");
                     fetchedUrls.add(src);
+//                    if(isValidImageUrl(src)){
+//                        fetchedUrls.add(src);
+//                    }
                 }
                 Collections.shuffle(fetchedUrls);
                 if (fetchedUrls.size() > 20) {
@@ -215,6 +226,20 @@ public class MainActivity extends AppCompatActivity {
                 dialogProgressTextView.setText("Downloading " + progress + " of " + max + " images...");
                 dialogProgressBar.setProgress(progress);
             });
+        }
+
+        private boolean isValidImageUrl(String urlString) {
+            try {
+                URL url = new URL(urlString);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("HEAD");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+                int responseCode = connection.getResponseCode();
+                return (200 <= responseCode && responseCode <= 299);
+            } catch (IOException e) {
+                return false;
+            }
         }
     }
 }
