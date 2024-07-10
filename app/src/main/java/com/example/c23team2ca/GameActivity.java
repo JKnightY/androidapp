@@ -100,7 +100,7 @@ public class GameActivity extends AppCompatActivity {
                 player2Matches++;
             }
             matchCount++;
-            matchCountTextView.setText(String.format("Player 1: %d, Player 2: %d", player1Matches, player2Matches));
+            matchCountTextView.setText(String.format("Score: %d:%d", player1Matches, player2Matches));
             if (matchCount == 6) {
                 // All matches found, play win sound and start CongratulationsActivity
                 soundPool.play(winSound, 1, 1, 0, 0, 1); // Play the win sound
