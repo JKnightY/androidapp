@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar dialogProgressBar;
     private TextView dialogProgressTextView;
     private Handler handler;
+    ExecutorService dlExecutor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         imageAdapter = new ImageAdapter(imageUrls, selectedImages, this::onImageSelected);
         imageRecyclerView.setLayoutManager(new GridLayoutManager(this, 4));
         imageRecyclerView.setAdapter(imageAdapter);
-
+        dlExecutor = Executors.newSingleThreadExecutor();
         fetchButton.setOnClickListener(v -> fetchImages());
         startGameButton.setOnClickListener(v -> startGame());
 
@@ -102,20 +103,22 @@ public class MainActivity extends AppCompatActivity {
     private void fetchImages() {
         String url = urlEditText.getText().toString();
         if (url.isEmpty()) {
-            //Toast.makeText(this, "Please enter a URL", Toast.LENGTH_SHORT).show();
-            //return;
+            // Toast.makeText(this, "Please enter a URL", Toast.LENGTH_SHORT).show();
+            // return;
             url = (String) urlEditText.getHint();
         }
 
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             url = "https://" + url;
         }
-
-
+        if (dlExecutor != null && !dlExecutor.isShutdown()) {
+            // dlExecutor.shutdownNow();
+            imageUrls.clear();
+            imageAdapter.notifyDataSetChanged();
+        }
         selectedImages.clear();
         imageAdapter.notifyDataSetChanged();
         startGameButton.setVisibility(View.GONE);
-
 
         progressBar.setVisibility(View.VISIBLE);
         progressTextView.setVisibility(View.VISIBLE);
@@ -125,8 +128,7 @@ public class MainActivity extends AppCompatActivity {
         dialogProgressTextView.setText("Downloading 0 of 20 images...");
         progressDialog.show();
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(new DownloadImagesTask(url));
+        dlExecutor.execute(new DownloadImagesTask(url));
     }
 
     private void onImageSelected(String imageUrl) {
@@ -158,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
             soundPool.release();
             soundPool = null;
         }
+        dlExecutor.shutdownNow();
     }
 
     private class DownloadImagesTask implements Runnable {
@@ -174,7 +177,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Log.d(TAG, "Fetching URL: " + url);
                 Document doc = Jsoup.connect(url)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                        .userAgent(
+                                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
                         .timeout(10000)
                         .get();
                 Elements elements = doc.select("img[src]");
@@ -182,9 +186,9 @@ public class MainActivity extends AppCompatActivity {
                 for (Element img : elements) {
                     String src = img.attr("abs:src");
                     fetchedUrls.add(src);
-//                    if(isValidImageUrl(src)){
-//                        fetchedUrls.add(src);
-//                    }
+                    // if(isValidImageUrl(src)){
+                    // fetchedUrls.add(src);
+                    // }
                 }
                 Collections.shuffle(fetchedUrls);
                 if (fetchedUrls.size() > 20) {
@@ -205,7 +209,8 @@ public class MainActivity extends AppCompatActivity {
                     imageUrls.clear();
                     imageUrls.addAll(images);
                     imageAdapter.notifyDataSetChanged();
-                    Snackbar.make(findViewById(android.R.id.content), "Images downloaded successfully", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Images downloaded successfully",
+                            Snackbar.LENGTH_LONG).show();
                 });
 
             } catch (IOException e) {
