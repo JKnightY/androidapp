@@ -51,9 +51,6 @@ public class MainActivity extends AppCompatActivity {
     private List<String> fetchedUrls = new ArrayList<>();
     private SoundPool soundPool;
     private int soundEffect;
-    private AlertDialog progressDialog;
-    private ProgressBar dialogProgressBar;
-    private TextView dialogProgressTextView;
     private Handler handler;
     ExecutorService dlExecutor;
 
@@ -88,16 +85,6 @@ public class MainActivity extends AppCompatActivity {
         soundEffect = soundPool.load(this, R.raw.sound_effect, 1);
 
         handler = new Handler(Looper.getMainLooper());
-
-        // Initialize progress dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.progress_dialog, null);
-        dialogProgressBar = dialogView.findViewById(R.id.dialogProgressBar);
-        dialogProgressTextView = dialogView.findViewById(R.id.dialogProgressTextView);
-        builder.setView(dialogView);
-        builder.setCancelable(false);
-        progressDialog = builder.create();
     }
 
     private void fetchImages() {
@@ -123,10 +110,6 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         progressTextView.setVisibility(View.VISIBLE);
         progressTextView.setText("Downloading 0 of 20 images...");
-
-        dialogProgressBar.setMax(20);
-        dialogProgressTextView.setText("Downloading 0 of 20 images...");
-        progressDialog.show();
 
         dlExecutor.execute(new DownloadImagesTask(url));
     }
@@ -205,7 +188,6 @@ public class MainActivity extends AppCompatActivity {
                 handler.post(() -> {
                     progressBar.setVisibility(View.GONE);
                     progressTextView.setVisibility(View.GONE);
-                    progressDialog.dismiss();
                     imageUrls.clear();
                     imageUrls.addAll(images);
                     imageAdapter.notifyDataSetChanged();
@@ -218,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
                 handler.post(() -> {
                     progressBar.setVisibility(View.GONE);
                     progressTextView.setVisibility(View.GONE);
-                    progressDialog.dismiss();
                     Toast.makeText(MainActivity.this, "Failed to fetch images", Toast.LENGTH_SHORT).show();
                 });
             }
@@ -228,8 +209,6 @@ public class MainActivity extends AppCompatActivity {
             handler.post(() -> {
                 progressTextView.setText("Downloading " + progress + " of " + max + " images...");
                 progressBar.setProgress(progress);
-                dialogProgressTextView.setText("Downloading " + progress + " of " + max + " images...");
-                dialogProgressBar.setProgress(progress);
             });
         }
 
